@@ -135,6 +135,7 @@ namespace Proyecto1_completo_grupo4
                 {
                     string[] transicionDatos = lineasTxt[i].Split(',');
 
+
                     if (transicionDatos.Length != 3)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -144,7 +145,7 @@ namespace Proyecto1_completo_grupo4
                     Automata.Transiciones.Add(new TransicionEntity
                     {
                         EstadoOrigen = transicionDatos[0].Trim(),
-                        Simbolo = transicionDatos[1].Trim(),
+                        Simbolo = ConvertirEpsilon(transicionDatos[1].Trim()),
                         EstadoDestino = transicionDatos[2].Trim()
                     });
                 }
@@ -212,7 +213,7 @@ namespace Proyecto1_completo_grupo4
                     Automata.Transiciones.Add(new TransicionEntity
                     {
                         EstadoOrigen = transicionDatos[0].Trim('"'),
-                        Simbolo = transicionDatos[1].Trim('"'),
+                        Simbolo = ConvertirEpsilon(transicionDatos[1].Trim()),
                         EstadoDestino = transicionDatos[2].Trim('"')
                     });
                 }
@@ -816,7 +817,7 @@ namespace Proyecto1_completo_grupo4
         //Funcion para convertir espacios(" ") en epsilon
         static string ConvertirEpsilon(string caracter)
         {
-            if ( caracter == " ")
+            if ( caracter == " " || caracter=="")
             {
                 return "ɛ";
             }
