@@ -16,6 +16,7 @@ namespace Proyecto1_completo_grupo4
         static string cadena; //Variable global para almacenar la cadena ingresada por el usuario
         static List<string> recorrido = new List<string>(); //guardda cada estado recorrido 
         static List<string> recorridoFallido = new List<string>(); //cuarda la union de los estados recorridos si este falla, para luego comprar cual ruta ya se ha realizado
+        static bool AFN = false;
 
 
         // ------LECTURA ARCHIVO E INVOCACIÓN DE FUNCIONES PARA LOS TRES TIPOS DE ARCHIVOS-----
@@ -458,7 +459,7 @@ namespace Proyecto1_completo_grupo4
             }
         }
 
-        //Funcion para consultar y validar una cadena en el autómata  PRUEBAS ELIMINAR N PARA VOLVER AL NORMAL
+        //Funcion para consultar y validar una cadena en el autómata
         static void ConsultarCadena(AutomataEntity automata)
         {
             try
@@ -477,7 +478,15 @@ namespace Proyecto1_completo_grupo4
                 if (!string.IsNullOrEmpty(cadena))
                 {
                     Console.WriteLine("\nRecorrido:");
-                    RecorrerAFN(automata.EstadoInicial[0], cadena, 0, automata);
+                    
+                    if (AFN)
+                    {
+                        RecorrerAFN(automata.EstadoInicial[0], cadena, 0, automata);
+                    }
+                    else
+                    {
+                        RecorrerAF(automata.EstadoInicial[0], cadena, 0, automata);
+                    }
                 }
                 else
                 {
@@ -496,6 +505,8 @@ namespace Proyecto1_completo_grupo4
         static void ContinuarValidando(AutomataEntity automata)
         {
             string respuesta;
+            recorrido.Clear();
+            recorridoFallido.Clear();
 
             do
             {
@@ -505,6 +516,8 @@ namespace Proyecto1_completo_grupo4
                 if (respuesta.ToUpper() == "SI")
                 {
                     ConsultarCadena(automata);
+                    recorridoFallido.Clear();
+                    recorrido.Clear();
                     break;
                 }
                 else if (respuesta.ToUpper() == "NO")
@@ -553,6 +566,7 @@ namespace Proyecto1_completo_grupo4
                             break;
 
                         case "2":
+                            Console.Clear();
                             MostrarOpcion2();
                             break;
 
@@ -581,7 +595,8 @@ namespace Proyecto1_completo_grupo4
             {
                 if (!archivoLeido)
                 {
-                    LeerArchivos();
+                    AFN = false;
+                    LeerArchivos(); //se manda false para indicar que no es AFN
                     archivoLeido = true;
                 }
             }
@@ -599,10 +614,26 @@ namespace Proyecto1_completo_grupo4
 
         static void MostrarOpcion2()
         {
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine("¡Estamos trabajando para agregar esta función! ;)");
-            Console.ResetColor();
-            MostrarRegresarMenu();
+            bool archivoLeido = false;
+            try
+            {
+                if (!archivoLeido)
+                {
+                    AFN = true;
+                    LeerArchivos(); //se manda true para indicar que si es AFN
+                    archivoLeido = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error al leer archivo: {ex.Message}");
+                Console.ResetColor();
+            }
+            finally
+            {
+                MostrarMenu();
+            }
         }
 
         static void MostrarOpcionInvalida()
@@ -650,10 +681,11 @@ namespace Proyecto1_completo_grupo4
 
         static void Main(string[] args)
         {
-            Console.OutputEncoding = Encoding.UTF8;
+            Console.OutputEncoding = Encoding.UTF8; //para que muestre epsilon en consola
             MostrarBienvenida();
             MostrarMenu();
         }
+
 
 
         // -----FUNCIONES DEL AUTOMATA NO DETERMINISTA-----
@@ -664,11 +696,12 @@ namespace Proyecto1_completo_grupo4
 
             if (contador == caracteres.Length)
             {
+                recorrido.Add(estActual);
                 VerifEstFinalN(estActual, automata.EstadosFinales, automata);
             }
             else
             {
-                
+                recorrido.Add(estActual);
                 string sigEstado = SigEstadoN(ConvertirEpsilon(caracteres[contador]), estActual, automata);
 
                 string[] partes = sigEstado.Split(',');
@@ -727,7 +760,7 @@ namespace Proyecto1_completo_grupo4
                 contador++;//aumenta el contador para seguir recorriendo la cadena
                 estActual = sigEstado;//siguiente estado pasa a ser el actual para volver a llamar RecorrerAF
 
-                RecorrerAF(estActual, cadena, contador, automata);
+                RecorrerAFN(estActual, cadena, contador, automata);
             }
         }
 
@@ -740,7 +773,7 @@ namespace Proyecto1_completo_grupo4
 
             //Limpiar los estados finales
             string[] estadosFinalesLimpios = EstadosFinales.Select(ef => ef.Trim().ToUpper()).ToArray();
-
+            
             bool esEstadoFinal = estadosFinalesLimpios.Contains(estAcualLimpio);
 
             if (esEstadoFinal)
@@ -756,13 +789,27 @@ namespace Proyecto1_completo_grupo4
                 Console.WriteLine("El recorrido dirige a Epsilon. \nEl estado '" + estActual + "' no está permitido, la palabra NO es aceptable.");
                 Console.ResetColor();
                 ContinuarValidando(automata);
+            }else if(estActual.Equals("fallido"))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("El estado actual no cuenta con una ruta diferente a la anterior con el simbolo utilizado");
+                Console.ResetColor();
+                Console.WriteLine();
+                recorridoFallido.Add(string.Join(",", recorrido));
+                recorrido.Clear();
+                otrasRutasAFN(automata);
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("El recorrido dirige al estado '" + estActual + "' que no es un estado final, la palabra NO es aceptable.");
                 Console.ResetColor();
-                ContinuarValidando(automata);
+                Console.WriteLine();
+                //ContinuarValidando(automata);
+                recorridoFallido.Add(string.Join(",", recorrido));
+                recorrido.Clear();
+                otrasRutasAFN(automata);
+
             }
         }
 
@@ -777,5 +824,218 @@ namespace Proyecto1_completo_grupo4
             return caracter;
         }
 
+
+        //AFN: Se usan del segundo intento en adelante
+        //utiliza listas que guardan el último recorrido, se llama al método donde ya se utilizan esas nuevas condiciones
+        static void otrasRutasAFN(AutomataEntity automata)
+        {
+            int cantRecorridos = recorridoFallido.Count-1; //obtiene cantidad de items en lista, es decir, candidad de intentos o rutas.
+            string[] ultRecorrido = recorridoFallido[cantRecorridos].Split(','); //separa los estados del recorrido anterior en un arreglo
+            int longRecorrido = ultRecorrido.Length; //obtiene la cantidad de estados del recorrido. Esto para no llegar al último y cambiar de decisión.
+            if (longRecorrido==1)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Ninguna ruta acepta la cadena ingresada.");
+                Console.ResetColor();
+                ContinuarValidando(automata);
+            }
+            string ultEstados = ultRecorrido[longRecorrido - 1]; //aquí se guardaran los últimos estados donde ha fallado recorrido en los intentos anteriores. Separados por comas
+            string[] pivoteRecorrido;
+
+            while (cantRecorridos>=0)
+            {
+                cantRecorridos--;
+
+                if (cantRecorridos >=0)
+                {
+                    pivoteRecorrido = recorridoFallido[cantRecorridos].Split(','); //se obtiene el el recorrido anterior 
+
+                    if (longRecorrido == pivoteRecorrido.Length)//si la longitud del ultimo recorrido es igual a la del que se está comparando, significa que se quedan en el mismo estado
+                    {//esto se hace para guardar las posibles decisiones de ese estado, en caso que se tengan más de dos caminos por estado
+                        ultEstados = ultEstados + "," + pivoteRecorrido[longRecorrido - 1];
+                    }
+                }
+  
+            }
+
+            RecorrerAFN(automata.EstadoInicial[0], cadena, 0, automata,ultEstados,longRecorrido);
+        }
+
+        ////Funcion recursiva para recorrer el autómata con una cadena 
+        static void RecorrerAFN(string estActual, string cadena, int contador, AutomataEntity automata, string ultEstados, int longRecorrido)
+        {
+            string[] caracteres = cadena.ToCharArray().Select(c => c.ToString()).ToArray(); //separa la cadena ingresada en un arreglo string
+            string sigEstado = "";
+            if (contador == caracteres.Length)
+            {
+                recorrido.Add(estActual);
+                VerifEstFinalN(estActual, automata.EstadosFinales, automata);
+            }
+            else if (longRecorrido == 1 && contador >= caracteres.Length)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Ninguna ruta acepta la cadena ingresada.");
+                Console.ResetColor();
+                ContinuarValidando(automata);
+            }
+            else if (contador == longRecorrido-1)
+            {
+                //recorrido.Add(estActual);
+                sigEstado = SigEstadoN(ConvertirEpsilon(caracteres[contador]), estActual, automata, ultEstados);
+
+                string[] partes = sigEstado.Split(',');
+                sigEstado = partes[1];
+
+                if (partes[0] == "ε")
+                {
+                    ImprimirPasoN(estActual, "ε", sigEstado, contador - 1, cadena, automata,ultEstados,longRecorrido);
+                }
+                else
+                {
+                    ImprimirPasoN(estActual, caracteres[contador], sigEstado, contador, cadena, automata, ultEstados, longRecorrido);
+                }
+            }
+            else if (recorrido.Count == longRecorrido-2 /*&& recorrido.Count!=0*/) //aquí se llama la función para cambiar el último estado fallido
+            {
+                
+                if (contador < caracteres.Length)
+                {
+                    recorrido.Add(estActual);
+                    sigEstado = SigEstadoN(ConvertirEpsilon(caracteres[contador]), estActual, automata, ultEstados);
+
+                    string[] partes = sigEstado.Split(',');
+                    sigEstado = partes[1];
+
+                    if (partes[0] == "ε")
+                    {
+                        ImprimirPasoN(estActual, "ε", sigEstado, contador - 1, cadena, automata, ultEstados, longRecorrido);
+                    }
+                    else
+                    {
+                        ImprimirPasoN(estActual, caracteres[contador], sigEstado, contador, cadena, automata, ultEstados, longRecorrido);
+                    }
+
+                }
+            }
+            else //acá sigue ruta que ya se ha seguido antes porque se cambia hasta la última elección antes de que falle
+            {
+                
+                if (contador < caracteres.Length)
+                {
+                    recorrido.Add(estActual);
+                    sigEstado = SigEstadoN(ConvertirEpsilon(caracteres[contador]), estActual, automata); //obtiene el siguiente estado (ε,ESTADO) o (,ESTADO)
+
+                    string[] partes = sigEstado.Split(','); //Lo separa para verificar si en la primera posición está epsilon
+                    sigEstado = partes[1];
+
+                    if (partes[0] == "ε")//si en el primero está epsilon, se imprime esa ruta y se regresa el contador para no perder un caracter
+                    {
+                        ImprimirPasoN(estActual, "ε", sigEstado, contador - 1, cadena, automata, ultEstados, longRecorrido);
+                    }
+                    else// si no, imprime ruta normal
+                    {
+                        ImprimirPasoN(estActual, caracteres[contador], sigEstado, contador, cadena, automata, ultEstados, longRecorrido);
+                    }
+
+                }
+            }
+
+
+
+        }
+        
+        //Funcion para imprimir el paso actual del recorrido
+        static void ImprimirPasoN(string estActual, string caracter, string sigEstado, int contador, string cadena, AutomataEntity automata, string ultEstados, int longRecorrido)
+        {
+            int longitudCad = cadena.Length;
+            if (contador < longitudCad)
+            {
+                Console.WriteLine(estActual + " -> " + caracter + " -> " + sigEstado);
+                contador++;//aumenta el contador para seguir recorriendo la cadena
+
+                if (sigEstado.Equals("fallido"))
+                {
+                    VerifEstFinalN(sigEstado, automata.EstadosFinales, automata);
+                }
+                else
+                {
+                    estActual = sigEstado;//siguiente estado pasa a ser el actual para volver a llamar RecorrerAF
+                    RecorrerAFN(estActual, cadena, contador, automata, ultEstados, longRecorrido);
+                } 
+            }
+        }
+
+        //en proceso 2
+        //Funcion para obtener el siguiente estado en el autómata. SE USA PARA NO REPETIR LA ÚLTIMA ELECCIÓN FALLIDA
+        static string SigEstadoN(string caracter, string estado, AutomataEntity automata, string ultEstados)
+        {
+            string[] ultiEstados = ultEstados.Split(',');
+            string estadoDest="";
+            bool verif= false;
+
+            foreach (var transicion in automata.Transiciones)//recorre toda la lista (se mantiene en AFN)
+            {
+                if (estado.Equals(transicion.EstadoOrigen))//se compara estado recibido con la primera posicion de cada fila(estado actual) (Se mantiene en AFN)
+                {
+                    if (caracter.Equals(transicion.Simbolo))//Si coincide se compara con la segunda posición el cual es "la letra"
+                    {
+
+                        //return " ," + transicion.EstadoDestino;//Si ambas coinciden se retorna el siguiente estado
+                        //CAMBIAR  tengo que validar todas las rutas existentes y todas las rutas pasadas al mismo tiempo
+                        foreach (var item in ultiEstados)
+                        {
+                            if (item.Equals(transicion.EstadoDestino))
+                            {
+                                verif = false;
+                                break;
+                            }
+                            else
+                            {
+                                verif=true;
+                                estadoDest= " ," + transicion.EstadoDestino;//Si ambas coinciden se retorna el siguiente estado
+                            }
+
+                        }
+
+                    }
+                    else if ("ɛ" == transicion.Simbolo) //si no coincide la cadena con ninguna se verifica si existe ruta de Epsilon
+                    {
+                        //return "ε," + transicion.EstadoDestino;
+                        foreach (var item in ultiEstados)
+                        {
+                            if (item.Equals(transicion.EstadoDestino))
+                            {
+                                verif = false;
+                            }
+                            else
+                            {
+                                verif = true;
+                                estadoDest = " ," + transicion.EstadoDestino;//Si ambas coinciden se retorna el siguiente estado
+                            }
+
+                        }
+                    }
+                }
+            }
+            if (verif)
+            {
+               return estadoDest;
+            }
+            else //sin es falso significa que ya no quedan rutas
+            {                       
+               return ",fallido";
+
+            }
+
+            if (estado.ToUpper() == "E")
+            {
+                return "E";
+            }
+            else
+            {
+                return ("no se encontró el estado " + estado);
+
+            }
+        }
     }
 }
