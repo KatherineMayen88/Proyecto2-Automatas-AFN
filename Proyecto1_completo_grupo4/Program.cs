@@ -741,11 +741,12 @@ namespace Proyecto1_completo_grupo4
 
             if (estado.ToUpper() == "E")
             {
-                return "E";
+                return ",E";
             }
             else
             {
-                return ("no se encontró el estado " + estado);
+                //return ("no se encontró el estado " + estado); //SOLUCIÓN FUERA DE MATRIZ EN FALLIDOS
+                return ",fallido";
 
             }
         }
@@ -755,7 +756,11 @@ namespace Proyecto1_completo_grupo4
         static void ImprimirPasoN(string estActual, string caracter, string sigEstado, int contador, string cadena, AutomataEntity automata)
         {
             int longitudCad = cadena.Length;
-            if (contador < longitudCad)
+            if (sigEstado.Equals("fallido"))
+            {
+                VerifEstFinalN(sigEstado, automata.EstadosFinales, automata);
+            }
+            else if (contador < longitudCad)
             {
                 Console.WriteLine(estActual + " -> " + caracter + " -> " + sigEstado);
                 contador++;//aumenta el contador para seguir recorriendo la cadena
@@ -1007,11 +1012,12 @@ namespace Proyecto1_completo_grupo4
                             if (item.Equals(transicion.EstadoDestino))
                             {
                                 verif = false;
+                                break;
                             }
                             else
                             {
                                 verif = true;
-                                estadoDest = " ," + transicion.EstadoDestino;//Si ambas coinciden se retorna el siguiente estado
+                                estadoDest = "ε," + transicion.EstadoDestino;//Si ambas coinciden se retorna el siguiente estado
                             }
 
                         }
@@ -1028,15 +1034,6 @@ namespace Proyecto1_completo_grupo4
 
             }
 
-            if (estado.ToUpper() == "E")
-            {
-                return "E";
-            }
-            else
-            {
-                return ("no se encontró el estado " + estado);
-
-            }
         }
     }
 }
