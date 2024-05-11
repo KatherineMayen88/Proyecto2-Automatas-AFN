@@ -492,6 +492,7 @@ namespace Proyecto1_completo_grupo4
                 else
                 {
                     Console.WriteLine("El string está vacío.");
+                    ConsultarCadena(automata);
                 }
             }
             catch (Exception ex)
@@ -500,6 +501,35 @@ namespace Proyecto1_completo_grupo4
                 Console.WriteLine($"ERROR al mostrar recorrido: {ex.Message}");
                 Console.ResetColor();
             }
+        }
+
+        static void ContuniarValidandoAutomata()
+        {
+            string respuesta;
+            do
+            {
+                Console.WriteLine($"\nDesea seguir validando autómatas del mismo tipo? (SI o NO):");
+                respuesta = Console.ReadLine();
+
+                if (respuesta.ToUpper() == "SI")
+                {
+                    Console.WriteLine("");
+                    LeerArchivos();
+                    recorrido.Clear();
+                    break;
+                }
+                else if (respuesta.ToUpper() == "NO")
+                {
+                    Console.Clear();
+                    MostrarMenu();
+                    break;
+                }
+                else
+                {
+                    Console.Write($"\nEntrada no válida. Por favor ingrese 'SI' O ''NO'");
+                }
+
+            } while (respuesta != "SI" && respuesta != "NO");
         }
 
         //Funcion para continuar validando cadenas o volver al menu
@@ -523,8 +553,7 @@ namespace Proyecto1_completo_grupo4
                 }
                 else if (respuesta.ToUpper() == "NO")
                 {
-                    Console.Clear();
-                    MostrarMenu();
+                    ContuniarValidandoAutomata();
                     break;
                 }
                 else
