@@ -27,11 +27,6 @@ namespace Proyecto1_completo_grupo4
             bool archivoAceptado = false; //Se establece en true cuando se procesa con éxito un archivo.
                                           //Se utiliza para salir del loop una vez que se ha procesado un archivo.
 
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.WriteLine("AUTÓMATAS FINITOS DETERMINISTAS");
-            Console.WriteLine("-------------------------------");
-            Console.ResetColor();
-
             //Bucle para solicitar el path del archivo y procesarlo
             while (intentos <= maxIntentos && !archivoAceptado)
             {
@@ -563,11 +558,19 @@ namespace Proyecto1_completo_grupo4
                     {
                         case "1":
                             Console.Clear();
+                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.WriteLine("AUTÓMATAS FINITOS DETERMINISTAS");
+                            Console.WriteLine("-------------------------------");
+                            Console.ResetColor();
                             MostrarOpcion1();
                             break;
 
                         case "2":
                             Console.Clear();
+                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.WriteLine("AUTÓMATAS FINITOS NO DETERMINISTAS");
+                            Console.WriteLine("----------------------------------");
+                            Console.ResetColor();
                             MostrarOpcion2();
                             break;
 
